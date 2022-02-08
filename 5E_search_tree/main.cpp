@@ -1,5 +1,6 @@
 //#include "solution_tree.h"
 #include <cassert>
+#include <limits>
 
 using namespace std;
 
@@ -9,10 +10,20 @@ struct Node {
   const Node* right = nullptr;
 };
 
+bool IsSubtreeSorted(const Node* root, int max, int min) {
+    if (!root) {
+        return true;
+    }
+
+    if (root->value <= min || root->value >= max) {
+        return false;
+    }
+
+    return IsSubtreeSorted(root->left, root->value, min) && IsSubtreeSorted(root->right, max, root->value);
+}
+
 bool Solution(const Node* root) {
-    // Your code
-    // “ヽ(´▽｀)ノ”
-    return false;
+    return IsSubtreeSorted(root, std::numeric_limits<int>::max(), std::numeric_limits<int>::min());
 }
 
 int main() {
