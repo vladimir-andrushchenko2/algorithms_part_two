@@ -16,12 +16,8 @@ int siftDown(std::vector<int>& heap, int idx) {
     int index_of_larger_element = index_left_child;
 
     // if both children
-    if (index_right_child < heap.size()) {
-        if (heap[index_left_child] < heap[index_right_child]) {
-            index_of_larger_element = index_right_child;
-        } else {
-            index_of_larger_element = index_left_child;
-        }
+    if (index_right_child < heap.size() && heap[index_left_child] < heap[index_right_child]) {
+        index_of_larger_element = index_right_child;
     }
 
     if (heap[idx] < heap[index_of_larger_element]) {
