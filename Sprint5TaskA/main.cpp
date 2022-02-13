@@ -29,19 +29,19 @@ int IndexOfRightChild(int parent_index) {
 }
 
 template<typename It>
-bool IsInsideHeap(It begin, It end, int index) {
-    return index < std::distance(begin, end);
+bool IsInsideHeap(It before_begin, It end, int index) {
+    return index < std::distance(before_begin, end);
 }
 
 template<typename It>
-int IndexOfMax(It begin, int index_left, int index_right) {
-    return *(begin + index_left) < *(begin + index_right) ? index_right : index_left;
+int IndexOfMax(It before_begin, int index_left, int index_right) {
+    return *(before_begin + index_left) < *(before_begin + index_right) ? index_right : index_left;
 }
 
 template<typename It>
-void MaxHeapify(It begin, It end, const int index) {
+void MaxHeapify(It before_begin, It end, const int index) {
     // if no children
-    if (!IsInsideHeap(begin, end, IndexOfLeftChild(index))) {
+    if (!IsInsideHeap(before_begin, end, IndexOfLeftChild(index))) {
         return;
     }
     
@@ -49,13 +49,20 @@ void MaxHeapify(It begin, It end, const int index) {
     int index_of_larger_child = IndexOfLeftChild(index);
     
     // if both children exist
-    if (IsInsideHeap(begin, end, IndexOfRightChild(index))) {
-        index_of_larger_child = IndexOfMax(begin, IndexOfLeftChild(index), IndexOfRightChild(index));
+    if (IsInsideHeap(before_begin, end, IndexOfRightChild(index))) {
+        index_of_larger_child = IndexOfMax(before_begin, IndexOfLeftChild(index), IndexOfRightChild(index));
     }
     
-    if (IndexOfMax(begin, index, index_of_larger_child) != index) {
-        std::swap(*(begin + index), *(begin + index_of_larger_child));
-        MaxHeapify(begin, end, index_of_larger_child);
+    if (IndexOfMax(before_begin, index, index_of_larger_child) != index) {
+        std::swap(*(before_begin + index), *(before_begin + index_of_larger_child));
+        MaxHeapify(before_begin, end, index_of_larger_child);
+    }
+}
+
+template<typename It>
+void BuildMaxHeap(It before_begin, It end) {
+    for (int i = std::distance(before_begin, end) / 2; i > 0; --i) {
+        MaxHeapify(before_begin, end, i);
     }
 }
 
@@ -68,6 +75,16 @@ void Test() {
         
         assert(test_heap == desired_output);
         std::cout << "Test MaxHeapify OK\n";
+    }
+    
+    {
+        std::vector<int> test_heap = {-1, 4, 1, 3, 2, 16, 9, 10, 14, 8, 7};
+        BuildMaxHeap(test_heap.begin(), test_heap.end());
+        
+        std::vector<int> desired_output = {-1, 16, 14, 10, 8, 7, 9, 3, 2, 4, 1};
+        
+        assert(test_heap == desired_output);
+        std::cout << "Test BuildMaxHeap OK\n";
     }
 }
 
@@ -89,9 +106,9 @@ void RunProgram(std::istream& input) {
     
     input >> n_contestants;
     
-    std::vector<CompetitiveProgrammer> data(n_contestants);
+    std::vector<CompetitiveProgrammer> data(n_contestants + 1);
     
-    for (int i = 0; i < n_contestants; ++i) {
+    for (int i = 1; i < n_contestants; ++i) {
         input >> data[i].name;
         input >> data[i].score;
         input >> data[i].penalty;
