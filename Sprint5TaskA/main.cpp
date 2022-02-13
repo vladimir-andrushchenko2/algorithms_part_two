@@ -1,3 +1,4 @@
+// 65132675
 #include <iostream>
 #include <vector>
 #include <tuple>
@@ -5,16 +6,9 @@
 #include <cassert>
 #include <sstream>
 #include <iterator>
-#include <optional>
+#include <deque>
 
-const std::string test_input = R"d(5
-alla 4 100
-gena 6 1000
-gosha 2 90
-rita 2 90
-timofey 4 80)d";
-
-namespace Heap {
+namespace HeapUtility {
 
 int GetParent(int child_index) {
     return child_index / 2;
@@ -33,13 +27,13 @@ bool IsInsideHeap(It before_begin, It end, int index) {
     return index < std::distance(before_begin, end);
 }
 
-template<typename It>
-int IndexOfMax(It before_begin, int index_left, int index_right) {
-    return *(before_begin + index_left) < *(before_begin + index_right) ? index_right : index_left;
+template<typename It, typename Predicate>
+int IndexOfMax(It before_begin, int index_left, int index_right, Predicate is_less) {
+    return is_less(*(before_begin + index_left), *(before_begin + index_right)) ? index_right : index_left;
 }
 
-template<typename It>
-void MaxHeapify(It before_begin, It end, const int index) {
+template<typename It, typename Predicate>
+void MaxHeapify(It before_begin, It end, const int index, Predicate is_less) {
     // if no children
     if (!IsInsideHeap(before_begin, end, IndexOfLeftChild(index))) {
         return;
@@ -50,49 +44,33 @@ void MaxHeapify(It before_begin, It end, const int index) {
     
     // if both children exist
     if (IsInsideHeap(before_begin, end, IndexOfRightChild(index))) {
-        index_of_larger_child = IndexOfMax(before_begin, IndexOfLeftChild(index), IndexOfRightChild(index));
+        index_of_larger_child = IndexOfMax(before_begin, IndexOfLeftChild(index), IndexOfRightChild(index), is_less);
     }
     
-    if (IndexOfMax(before_begin, index, index_of_larger_child) != index) {
+    if (IndexOfMax(before_begin, index, index_of_larger_child, is_less) != index) {
         std::swap(*(before_begin + index), *(before_begin + index_of_larger_child));
-        MaxHeapify(before_begin, end, index_of_larger_child);
+        MaxHeapify(before_begin, end, index_of_larger_child, is_less);
     }
 }
 
-template<typename It>
-void BuildMaxHeap(It before_begin, It end) {
+template<typename It, typename Predicate>
+void BuildMaxHeap(It before_begin, It end, Predicate is_less) {
     for (int i = static_cast<int>(std::distance(before_begin, end)) / 2; i > 0; --i) {
-        MaxHeapify(before_begin, end, i);
-    }
-}
-
-void Test() {
-    {
-        std::vector<int> test_heap = {-1, 1, 2, 3};
-        MaxHeapify(test_heap.begin(), test_heap.end(), 1);
-        
-        std::vector<int> desired_output = {-1, 3, 2, 1};
-        
-        assert(test_heap == desired_output);
-        std::cout << "Test MaxHeapify OK\n";
-    }
-    
-    {
-        std::vector<int> test_heap = {-1, 4, 1, 3, 2, 16, 9, 10, 14, 8, 7};
-        BuildMaxHeap(test_heap.begin(), test_heap.end());
-        
-        std::vector<int> desired_output = {-1, 16, 14, 10, 8, 7, 9, 3, 2, 4, 1};
-        
-        assert(test_heap == desired_output);
-        std::cout << "Test BuildMaxHeap OK\n";
+        MaxHeapify(before_begin, end, i, is_less);
     }
 }
 
 }
 
 template<typename It, typename Predicate>
-void Heapsort(It begin, It end, Predicate predicate) {
-    assert(false);
+void Heapsort(It before_begin, It end, Predicate is_less) {
+    HeapUtility::BuildMaxHeap(before_begin, end, is_less);
+    
+    for (int i = static_cast<int>(std::distance(before_begin, end)) - 1; i > 1; --i) {
+        std::swap(*(before_begin + 1), *(before_begin + i));
+        --end;
+        HeapUtility::MaxHeapify(before_begin, end, 1, is_less);
+    }
 }
 
 struct CompetitiveProgrammer {
@@ -106,9 +84,9 @@ void RunProgram(std::istream& input) {
     
     input >> n_contestants;
     
-    std::vector<CompetitiveProgrammer> data(n_contestants + 1);
+    std::deque<CompetitiveProgrammer> data(n_contestants + 1);
     
-    for (int i = 1; i < n_contestants; ++i) {
+    for (int i = 1; i < data.size(); ++i) {
         input >> data[i].name;
         input >> data[i].score;
         input >> data[i].penalty;
@@ -120,15 +98,15 @@ void RunProgram(std::istream& input) {
         return std::tie(left_score_negative, left.penalty, left.name) < std::tie(right_score_negative, right.penalty, right.name);
     });
     
+    // remove ficticious element
+    data.pop_front();
+    
     for (const auto& x : data) {
         std::cout << x.name << '\n';
     }
 }
 
 int main(int argc, const char * argv[]) {
-//    std::stringstream test_input_stream{test_input};
-//    RunProgram(test_input_stream);
-    
-    Heap::Test();
+    RunProgram(std::cin);
     return 0;
 }
