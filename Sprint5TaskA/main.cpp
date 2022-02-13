@@ -61,7 +61,7 @@ void MaxHeapify(It before_begin, It end, const int index) {
 
 template<typename It>
 void BuildMaxHeap(It before_begin, It end) {
-    for (int i = std::distance(before_begin, end) / 2; i > 0; --i) {
+    for (int i = static_cast<int>(std::distance(before_begin, end)) / 2; i > 0; --i) {
         MaxHeapify(before_begin, end, i);
     }
 }
