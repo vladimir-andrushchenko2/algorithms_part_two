@@ -17,6 +17,18 @@ Node* FindParentOfMax(Node* trailing_pointer, Node* runner) {
     return trailing_pointer;
 }
 
+Node* Find(Node* root, int key) {
+    while (root && root->value != key) {
+        if (root->value < key) {
+            root = root->left;
+        } else {
+            root = root->right;
+        }
+    }
+    
+    return root && root->value == key ? root : nullptr;
+}
+
 Node* remove(Node* root, int key) {
     // Your code
     // “ヽ(´▽｀)ノ”
