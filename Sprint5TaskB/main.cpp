@@ -1,10 +1,21 @@
 #include <cassert>
+#include <utility>
 
 struct Node {
   Node* left;
   Node* right;
   int value;
 };
+
+// get parent of max node and node
+Node* FindParentOfMax(Node* trailing_pointer, Node* runner) {
+    while (runner->right) {
+        trailing_pointer = runner;
+        runner = runner->right;
+    }
+    
+    return trailing_pointer;
+}
 
 Node* remove(Node* root, int key) {
     // Your code
@@ -19,8 +30,18 @@ void test() {
     Node node5({&node4, nullptr, 8});
     Node node6({&node5, nullptr, 10});
     Node node7({&node3, &node6, 5});
-    Node* newHead = remove(&node7, 10);
-    assert(newHead->value == 5);
-    assert(newHead->right == &node5);
-    assert(newHead->right->value == 8);
+    
+    FindParentOfMax(<#Node *root#>)
+//    Node* newHead = remove(&node7, 10);
+//    assert(newHead->value == 5);
+//    assert(newHead->right == &node5);
+//    assert(newHead->right->value == 8);
+}
+
+
+
+int main() {
+    test();
+    
+    return 0;
 }
