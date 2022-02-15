@@ -17,8 +17,10 @@ Node* FindParentOfMax(Node* trailing_pointer, Node* runner) {
     return trailing_pointer;
 }
 
-Node* Find(Node* root, int key) {
+auto Find(Node* trailing_pointer, Node* root, int key) {
     while (root && root->value != key) {
+        trailing_pointer = root;
+        
         if (root->value < key) {
             root = root->left;
         } else {
@@ -26,7 +28,47 @@ Node* Find(Node* root, int key) {
         }
     }
     
-    return root && root->value == key ? root : nullptr;
+    return std::pair{trailing_pointer, root};
+}
+
+void Transplant(Node* parent_of_node_to_be_replaced, Node* node_to_be_replaced, Node* replacement) {
+    // if replacing root
+    if (!parent_of_node_to_be_replaced) {
+        node_to_be_replaced = replacement;
+        
+    } else if (node_to_be_replaced == parent_of_node_to_be_replaced->left) {
+        parent_of_node_to_be_replaced->left = replacement;
+        
+    } else {
+        parent_of_node_to_be_replaced->right = replacement;
+    }
+}
+
+void Delete(Node* parent, Node* node_to_delete) {
+    if (!node_to_delete->left) {
+        Transplant(parent, node_to_delete, node_to_delete->right);
+        
+    } else if (!node_to_delete->right) {
+        Transplant(parent, node_to_delete, node_to_delete->left);
+        
+    } else {
+        // if both children
+        Node* parent_of_max_in_left_subtree = FindParentOfMax(node_to_delete, node_to_delete->left);
+        
+        decltype(node_to_delete->value) value_of_max_in_left_subtree;
+        
+        // удаляю узел который буду использовать как затычку
+        if (node_to_delete != parent_of_max_in_left_subtree) {
+            value_of_max_in_left_subtree = parent_of_max_in_left_subtree->right->value;
+            Transplant(parent_of_max_in_left_subtree, parent_of_max_in_left_subtree->right, parent_of_max_in_left_subtree->right->left);
+            
+        } else {
+            value_of_max_in_left_subtree = parent_of_max_in_left_subtree->left->value;
+            Transplant(parent_of_max_in_left_subtree, parent_of_max_in_left_subtree->left, parent_of_max_in_left_subtree->left->left);
+        }
+        
+        node_to_delete->value = value_of_max_in_left_subtree;
+    }
 }
 
 Node* remove(Node* root, int key) {
