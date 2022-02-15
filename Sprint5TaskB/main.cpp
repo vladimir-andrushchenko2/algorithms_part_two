@@ -72,8 +72,10 @@ void Delete(Node* parent, Node* node_to_delete) {
 }
 
 Node* remove(Node* root, int key) {
-    // Your code
-    // “ヽ(´▽｀)ノ”
+    auto output = root;
+    auto [parent, node_to_delete] = Find(nullptr, root, key);
+    Delete(parent, node_to_delete);
+    return output;
 }
 
 void test() {
@@ -85,11 +87,10 @@ void test() {
     Node node6({&node5, nullptr, 10});
     Node node7({&node3, &node6, 5});
     
-    FindParentOfMax(<#Node *root#>)
-//    Node* newHead = remove(&node7, 10);
-//    assert(newHead->value == 5);
-//    assert(newHead->right == &node5);
-//    assert(newHead->right->value == 8);
+    Node* newHead = remove(&node7, 10);
+    assert(newHead->value == 5);
+    assert(newHead->right == &node5);
+    assert(newHead->right->value == 8);
 }
 
 
