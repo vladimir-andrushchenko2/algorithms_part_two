@@ -1,3 +1,5 @@
+// 65208098
+
 #include <cassert>
 #include <utility>
 
@@ -8,13 +10,13 @@ struct Node {
 };
 
 // get parent of max node and node
-Node* FindParentOfMax(Node* trailing_pointer, Node* runner) {
-    while (runner->right) {
-        trailing_pointer = runner;
-        runner = runner->right;
+Node* FindParentOfMax(Node* root_parent, Node* root) {
+    while (root->right) {
+        root_parent = root;
+        root = root->right;
     }
     
-    return trailing_pointer;
+    return root_parent;
 }
 
 auto Find(Node* root, int key) {
@@ -33,51 +35,69 @@ auto Find(Node* root, int key) {
     return std::pair{trailing_pointer, root};
 }
 
-void Transplant(Node* parent_of_node_to_be_replaced, Node* node_to_be_replaced, Node* replacement) {
+Node* CopyNode(Node* parent_of_target, Node* target, Node* source) {
     // if replacing root
-    if (!parent_of_node_to_be_replaced) {
-        node_to_be_replaced = replacement;
+    if (!parent_of_target) {
+        target = source;
         
-    } else if (node_to_be_replaced == parent_of_node_to_be_replaced->left) {
-        parent_of_node_to_be_replaced->left = replacement;
+    } else if (target == parent_of_target->left) {
+        parent_of_target->left = source;
         
     } else {
-        parent_of_node_to_be_replaced->right = replacement;
+        parent_of_target->right = source;
     }
+
+    return source;
 }
 
-void Delete(Node* parent, Node* node_to_delete) {
+Node* Delete(Node* parent, Node* node_to_delete) {
     if (!node_to_delete->left) {
-        Transplant(parent, node_to_delete, node_to_delete->right);
+        return CopyNode(parent, node_to_delete, node_to_delete->right);
         
     } else if (!node_to_delete->right) {
-        Transplant(parent, node_to_delete, node_to_delete->left);
+        return CopyNode(parent, node_to_delete, node_to_delete->left);
         
     } else {
         // if both children
         Node* parent_of_max_in_left_subtree = FindParentOfMax(node_to_delete, node_to_delete->left);
         
-        decltype(node_to_delete->value) value_of_max_in_left_subtree;
+        Node* max_in_left_subtree;
         
-        // удаляю узел который буду использовать как затычку
+        // delete node that will be used as replacement
         if (node_to_delete != parent_of_max_in_left_subtree) {
-            value_of_max_in_left_subtree = parent_of_max_in_left_subtree->right->value;
-            Transplant(parent_of_max_in_left_subtree, parent_of_max_in_left_subtree->right, parent_of_max_in_left_subtree->right->left);
+            max_in_left_subtree = parent_of_max_in_left_subtree->right;
+
+            CopyNode(parent_of_max_in_left_subtree, parent_of_max_in_left_subtree->right, parent_of_max_in_left_subtree->right->left);
             
         } else {
-            value_of_max_in_left_subtree = parent_of_max_in_left_subtree->left->value;
-            Transplant(parent_of_max_in_left_subtree, parent_of_max_in_left_subtree->left, parent_of_max_in_left_subtree->left->left);
+            // if node_to_delete is parent of max in left subtree
+            max_in_left_subtree = parent_of_max_in_left_subtree->left;
+
+            CopyNode(parent_of_max_in_left_subtree, parent_of_max_in_left_subtree->left, parent_of_max_in_left_subtree->left->left);
         }
         
-        node_to_delete->value = value_of_max_in_left_subtree;
+        max_in_left_subtree->left = node_to_delete->left;
+        max_in_left_subtree->right = node_to_delete->right;
+
+        return CopyNode(parent, node_to_delete, max_in_left_subtree);
     }
 }
 
 Node* remove(Node* root, int key) {
-    auto output = root;
     auto [parent, node_to_delete] = Find(root, key);
-    Delete(parent, node_to_delete);
-    return output;
+
+    if (!node_to_delete) {
+        return root;
+    }
+
+    // if deleting root
+    if (!parent) {
+        return Delete(parent, node_to_delete);
+
+    } else {
+        Delete(parent, node_to_delete);
+        return root;
+    }
 }
 
 void test() {
@@ -88,10 +108,22 @@ void test() {
     Node node5({&node4, nullptr, 8});
     Node node6({&node5, nullptr, 10});
     Node node7({&node3, &node6, 5});
-    Node* newHead = remove(&node7, 10);
-    assert(newHead->value == 5);
-    assert(newHead->right == &node5);
-    assert(newHead->right->value == 8);
+//    Node* newHead = remove(&node7, 10);
+//    assert(newHead->value == 5);
+//    assert(newHead->right == &node5);
+//    assert(newHead->right->value == 8);
+
+    Node* newHead = remove(&node7, 5234);
+    assert(newHead == &node7);
+
+//    Node* newHead = remove(&node7, 5);
+//    assert(newHead->value == 3);
+//
+//    assert(newHead->left == &node3);
+//    assert(newHead->left->right == &node1);
+//
+//    assert(newHead->right->value == 10);
+//    assert(newHead->right->left == &node5);
 }
 
 
