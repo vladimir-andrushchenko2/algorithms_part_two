@@ -8,7 +8,21 @@
 #include <iterator>
 #include <deque>
 
-namespace HeapUtility {
+/*
+-- ПРИНЦИП РАБОТЫ --
+Создается не убывающая пирамида по свойстам которой в корне будет самый большой элемент,
+ отправим его в конец масива, а не первое место поставим крайний лист, затем уменьшим размер пирамиды и восстановим свойства пирамиды, просеив новый корень вниз по пирамиде.
+ Будем повторять пока размер пирамиды не будет равен одному.
+ 
+-- ВРЕМЕННАЯ СЛОЖНОСТЬ --
+ O(n log n) но константна меньше чем у сортировки слиянием и легче реализовать без выделения дополнительной памяти.
+
+-- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
+ O(n) для хранения массива, дополнительная память не нужна
+ 
+*/
+
+namespace heap_utility {
 
 int GetParent(int child_index) {
     return child_index / 2;
@@ -64,12 +78,12 @@ void BuildMaxHeap(It before_begin, It end, Predicate is_less) {
 
 template<typename It, typename Predicate>
 void Heapsort(It before_begin, It end, Predicate is_less) {
-    HeapUtility::BuildMaxHeap(before_begin, end, is_less);
+    heap_utility::BuildMaxHeap(before_begin, end, is_less);
     
     for (int i = static_cast<int>(std::distance(before_begin, end)) - 1; i > 1; --i) {
         std::swap(*(before_begin + 1), *(before_begin + i));
         --end;
-        HeapUtility::MaxHeapify(before_begin, end, 1, is_less);
+        heap_utility::MaxHeapify(before_begin, end, 1, is_less);
     }
 }
 
