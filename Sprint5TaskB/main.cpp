@@ -2,9 +2,9 @@
 #include <utility>
 
 struct Node {
-  Node* left;
-  Node* right;
-  int value;
+    Node* left;
+    Node* right;
+    int value;
 };
 
 // get parent of max node and node
@@ -17,14 +17,16 @@ Node* FindParentOfMax(Node* trailing_pointer, Node* runner) {
     return trailing_pointer;
 }
 
-auto Find(Node* trailing_pointer, Node* root, int key) {
+auto Find(Node* root, int key) {
+    Node* trailing_pointer = nullptr;
+
     while (root && root->value != key) {
         trailing_pointer = root;
         
         if (root->value < key) {
-            root = root->left;
-        } else {
             root = root->right;
+        } else {
+            root = root->left;
         }
     }
     
@@ -73,7 +75,7 @@ void Delete(Node* parent, Node* node_to_delete) {
 
 Node* remove(Node* root, int key) {
     auto output = root;
-    auto [parent, node_to_delete] = Find(nullptr, root, key);
+    auto [parent, node_to_delete] = Find(root, key);
     Delete(parent, node_to_delete);
     return output;
 }
@@ -86,7 +88,6 @@ void test() {
     Node node5({&node4, nullptr, 8});
     Node node6({&node5, nullptr, 10});
     Node node7({&node3, &node6, 5});
-    
     Node* newHead = remove(&node7, 10);
     assert(newHead->value == 5);
     assert(newHead->right == &node5);
