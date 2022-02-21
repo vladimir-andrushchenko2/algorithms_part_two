@@ -1,4 +1,5 @@
 #include <iostream>
+#include <deque>
 #include <vector>
 #include <set>
 #include <stack>
@@ -17,12 +18,12 @@ struct Time {
     int out{};
 };
 
-std::vector<Time> DFS(int start_vertex, const AdjacencyList& adjacency_list) {
+auto DFS(int start_vertex, const AdjacencyList& adjacency_list) {
     int time{};
     
     std::vector<Color> vertex_color(adjacency_list.size(), Color::White);
 
-    std::vector<Time> output(adjacency_list.size());
+    std::deque<Time> output(adjacency_list.size());
 
     std::stack<VertexId> stack;
 
@@ -44,13 +45,17 @@ std::vector<Time> DFS(int start_vertex, const AdjacencyList& adjacency_list) {
                 }
             }
 
-        } else {
+        } else if (vertex_color[vertex_id] == Color::Gray) {
             vertex_color[vertex_id] = Color::Black;
             output[vertex_id].out = time++;
+            stack.pop();
+
+        } else {
             stack.pop();
         }
     }
 
+    output.pop_front();
     return output;
 }
 
