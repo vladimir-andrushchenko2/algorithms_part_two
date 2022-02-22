@@ -5,6 +5,7 @@
 #include <cassert>
 #include <functional>
 #include <numeric>
+#include <utility>
 
 using VertexId = int;
 using AdjacencyList = std::vector<std::set<VertexId>>;
@@ -33,14 +34,14 @@ void TopSort(Graph& graph, VertexId vertex_id) {
     graph.GetVertexColor(vertex_id) = Color::Gray;
     
     for (auto adjacent_vertex : graph.adjacency_list[vertex_id]) {
-        if (graph.GetVertexColor(vertex_id) == Color::White) {
+        if (graph.GetVertexColor(adjacent_vertex) == Color::White) {
             TopSort(graph, adjacent_vertex);
         }
     }
     
     graph.GetVertexColor(vertex_id) = Color::Black;
     
-    graph.order.push_back(vertex_id);
+    graph.order.push_front(vertex_id);
 }
 
 auto MainTopSort(const AdjacencyList& adjacency_list) {
