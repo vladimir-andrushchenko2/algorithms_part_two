@@ -30,10 +30,14 @@ public:
 private:
     template<typename Predicate>
     void DFS(VertexId start_id, std::vector<bool>& is_visited, Predicate predicate) {
+        predicate(start_id);
+        
         is_visited[start_id] = true;
         
         for (VertexId adjacent_vertex : adjacency_list_[start_id]) {
-            predicate(adjacent_vertex);
+            if (!is_visited[adjacent_vertex]) {
+                DFS(adjacent_vertex, is_visited, predicate);
+            }
         }
     }
     
@@ -42,8 +46,10 @@ private:
         
         for (int i = 1; i < adjacency_list_.size(); ++i) {
             if (!is_visited[i]) {
-                DFS(i, is_visited, [](VertexId id) {
-                    std::cout << id << ' ';
+                auto& new_group = connected_groups_.emplace_back();
+                
+                DFS(i, is_visited, [&new_group](VertexId id) {
+                    new_group.insert(id);
                 });
             }
         }
@@ -51,7 +57,7 @@ private:
     
 private:
     const AdjacencyList& adjacency_list_;
-    std::vector<std::vector<int>> connected_groups_;
+    std::vector<std::set<int>> connected_groups_;
 };
 
 int main() {
@@ -69,15 +75,20 @@ int main() {
         std::cin >> from >> to;
         
         adjacency_list[from].insert(to);
+        adjacency_list[to].insert(from);
     }
     
     Graph graph(adjacency_list);
     
-    for (VertexId vertex_id : graph.) {
-        std::cout << vertex_id << ' ';
-    }
+    std::cout << graph.GetConnectedGroups().size() << '\n';
     
-    std::cout << '\n';
+    for (const auto& connected_group : graph.GetConnectedGroups()) {
+        for (VertexId vertex_id : connected_group) {
+            std::cout << vertex_id << ' ';
+        }
+        
+        std::cout << '\n';
+    }
     
     return 0;
 }
