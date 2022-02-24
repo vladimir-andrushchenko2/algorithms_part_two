@@ -6,6 +6,7 @@
 #include <functional>
 #include <numeric>
 #include <utility>
+#include <queue>
 
 using VertexId = int;
 using AdjacencyList = std::vector<std::set<VertexId>>;
@@ -50,6 +51,14 @@ public:
         });
     }
     
+    void PrintBFS(std::ostream& output_stream, VertexId starting_vertex) const {
+        auto colors = GetArrayOfColor(Color::White);
+        
+        BFS(starting_vertex, colors, [&output_stream](VertexId vertex){
+            output_stream << vertex << ' ';
+        });
+    }
+    
 private:
     std::vector<Color> GetArrayOfColor(Color color) const {
         return {adjacency_list_.size(), color};
@@ -68,6 +77,35 @@ private:
         }
     }
     
+    template<typename Predicate>
+    void BFS(VertexId start_id, std::vector<Color>& color_of, Predicate predicate) const {
+        predicate(start_id);
+        
+        color_of[start_id] = Color::Gray;
+        
+        std::queue<VertexId> planned;
+        
+        planned.push(start_id);
+        
+        while (!planned.empty()) {
+            VertexId vertex_which_neighbours_need_to_be_processed = planned.front();
+            
+            planned.pop();
+            
+            for (VertexId adjacent_vertex : adjacency_list_[vertex_which_neighbours_need_to_be_processed]) {
+                if (color_of[adjacent_vertex] == Color::White) {
+                    predicate(adjacent_vertex);
+                    
+                    color_of[adjacent_vertex] = Color::Gray;
+                    
+                    planned.push(adjacent_vertex);
+                }
+            }
+            
+            color_of[vertex_which_neighbours_need_to_be_processed] = Color::Black;
+        }
+    }
+    
 private:
     AdjacencyList adjacency_list_;
 };
@@ -79,7 +117,7 @@ int main() {
     
     std::cin >> starting_vertex;
     
-    graph.PrintDFS(std::cout, starting_vertex);
+    graph.PrintBFS(std::cout, starting_vertex);
     
     return 0;
 }
