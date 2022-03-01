@@ -15,7 +15,7 @@ using VertexId = int;
 
 using Distance = int;
 
-static constexpr int kInfinity = std::numeric_limits<int>::infinity();
+static constexpr int kInfinity = std::numeric_limits<int>::max();
 
 static constexpr VertexId kNoneVertexId = -1;
 
@@ -119,7 +119,7 @@ Graph ReadUndirectedGraph(std::istream& input) {
         std::cin >> from >> to >> weight;
 
         // if two edges between vertexes save only one with smaller weight
-        if (adjacency_list[from].count(to) > 0 && adjacency_list[from][to] > weight) {
+        if (adjacency_list[from].count(to) == 0 || adjacency_list[from][to] > weight) {
             adjacency_list[from][to] = weight;
             adjacency_list[to][from] = weight;
         }
@@ -131,6 +131,11 @@ Graph ReadUndirectedGraph(std::istream& input) {
 int main() {
     auto graph = ReadUndirectedGraph(std::cin);
 
+    for (VertexId id : graph.Dijkstra(kFirstVertexId)) {
+        std::cout << id << ' ';
+    }
+
+    std::cout << std::endl;
 
     return 0;
 }
