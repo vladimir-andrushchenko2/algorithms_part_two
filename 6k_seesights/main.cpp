@@ -30,34 +30,8 @@ public:
     Graph() = delete;
 
     Graph(AdjacencyList adjacency_list) :
-    adjacency_list_(std::move(adjacency_list)) {
-        ResetData();
-    }
+    adjacency_list_(std::move(adjacency_list)) {}
 
-    static Graph ReadUndirectedGraph(std::istream& input) {
-        int vertexes_count, edges_count;
-
-        std::cin >> vertexes_count >> edges_count;
-
-        AdjacencyList adjacency_list(vertexes_count + 1);
-
-        std::string line;
-
-        for (int i = 0; i < edges_count; ++i) {
-            int from, to, weight;
-
-            std::cin >> from >> to >> weight;
-
-            // if two edges between vertexes save only one with smaller weight
-            if (adjacency_list[from].count(to) > 0 && adjacency_list[from][to] > weight) {
-                adjacency_list[from][to] = weight;
-                adjacency_list[to][from] = weight;
-            }
-        }
-
-        return Graph{std::move(adjacency_list)};
-    }
-    
     VertexId GetMinDistanceUnvisitedVertex() {
         int current_minimum = kInfinity;
         VertexId current_minimum_vertex = kNoneVertexId;
@@ -130,8 +104,32 @@ private:
     std::vector<bool> is_visited_;
 };
 
+Graph ReadUndirectedGraph(std::istream& input) {
+    int vertexes_count, edges_count;
+
+    std::cin >> vertexes_count >> edges_count;
+
+    AdjacencyList adjacency_list(vertexes_count + 1);
+
+    std::string line;
+
+    for (int i = 0; i < edges_count; ++i) {
+        int from, to, weight;
+
+        std::cin >> from >> to >> weight;
+
+        // if two edges between vertexes save only one with smaller weight
+        if (adjacency_list[from].count(to) > 0 && adjacency_list[from][to] > weight) {
+            adjacency_list[from][to] = weight;
+            adjacency_list[to][from] = weight;
+        }
+    }
+
+    return Graph{std::move(adjacency_list)};
+}
+
 int main() {
-    auto graph = Graph::ReadUndirectedGraph(std::cin);
+    auto graph = ReadUndirectedGraph(std::cin);
 
 
     return 0;
