@@ -12,11 +12,17 @@
 #include <unordered_map>
 
 using VertexId = int;
+
 using Distance = int;
+
 static constexpr int kInfinity = std::numeric_limits<int>::infinity();
+
 static constexpr VertexId kNoneVertexId = -1;
 
+static constexpr VertexId kFirstVertexId = 1;
+
 using AdjacencyList = std::vector<std::unordered_map<VertexId, Distance>>;
+
 using Matrix = std::vector<std::vector<int>>;
 
 struct Graph {
@@ -25,9 +31,7 @@ public:
 
     Graph(AdjacencyList adjacency_list) :
     adjacency_list_(std::move(adjacency_list)) {
-        std::vector<Distance> distance_(adjacency_list_.size(), kInfinity);
-        std::vector<VertexId> previous_(adjacency_list_.size(), kNoneVertexId);
-        std::vector<bool> is_visited_(adjacency_list_.size(), false)
+        ResetData();
     }
 
     static Graph ReadUndirectedGraph(std::istream& input) {
@@ -54,11 +58,11 @@ public:
         return Graph{std::move(adjacency_list)};
     }
     
-    VertexId GetMinDistanceNotUnvisitedVertex() {
+    VertexId GetMinDistanceUnvisitedVertex() {
         int current_minimum = kInfinity;
         VertexId current_minimum_vertex = kNoneVertexId;
         
-        for (int vertex_id = 1; vertex_id < adjacency_list_.size(); ++vertex_id) {
+        for (auto vertex_id = kFirstVertexId; vertex_id < adjacency_list_.size(); ++vertex_id) {
             if (!is_visited_[vertex_id] && distance_[vertex_id]  < current_minimum) {
                 current_minimum = distance_[vertex_id];
                 current_minimum_vertex = vertex_id;
@@ -69,7 +73,9 @@ public:
     }
     
     bool ContainsReachableButUnvisitedVertexes() {
-        for (int vertex_id = 1; vertex_id < adjacency_list_.size(); ++vertex_id) {
+        static constexpr VertexId first_vertex_id = kFirstVertexId;
+
+        for (auto vertex_id = first_vertex_id; vertex_id < adjacency_list_.size(); ++vertex_id) {
             if (!is_visited_[vertex_id] && distance_[vertex_id] != kInfinity) {
                 return true;
             }
@@ -78,17 +84,47 @@ public:
         return false;
     }
 
-    Matrix Dijkstra(VertexId starting_vertex) {
-        distance_[starting_vertex] = 0;
-        
-        
-        while (ContainsReachableButUnvisitedVertexes()) {
-            
+    Distance Weight(VertexId from, VertexId to) {
+        return adjacency_list_.at(from).at(to);
+    }
+
+    void Relax(VertexId from, VertexId to) {
+        if (distance_[to] > distance_[from] + Weight(from, to)) {
+            distance_[to] = distance_[from] + Weight(from, to);
+            previous_[to] = from;
         }
     }
 
+    void ResetData() {
+        distance_ = std::vector<Distance>(adjacency_list_.size(), kInfinity);
+
+        previous_ = std::vector<VertexId>(adjacency_list_.size(), kNoneVertexId);
+
+        is_visited_ = std::vector<bool>(adjacency_list_.size(), false);
+    }
+
+    std::vector<Distance> Dijkstra(VertexId starting_vertex) {
+        ResetData();
+
+        distance_[starting_vertex] = 0;
+
+        while (ContainsReachableButUnvisitedVertexes()) {
+            VertexId min_distance_univisited_vertex = GetMinDistanceUnvisitedVertex();
+
+            is_visited_[min_distance_univisited_vertex] = true;
+
+            const auto neigbours = adjacency_list_.at(min_distance_univisited_vertex);
+
+            for (auto [neighbour_vertex_id, weight] : neigbours) {
+                Relax(min_distance_univisited_vertex, neighbour_vertex_id);
+            }
+        }
+
+        return std::move(distance_);
+    }
+
 private:
-    AdjacencyList adjacency_list_;
+    const AdjacencyList adjacency_list_;
     std::vector<Distance> distance_;
     std::vector<VertexId> previous_;
     std::vector<bool> is_visited_;
