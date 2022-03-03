@@ -10,6 +10,7 @@
 #include <optional>
 #include <limits>
 #include <unordered_map>
+#include <queue>
 
 using VertexId = int;
 
@@ -41,15 +42,50 @@ public:
     adjacency_list_(std::move(adjacency_list)) {}
 
     int VertexCount() const {
-        return static_cast<int>(adjacency_list_.size());
+        return static_cast<int>(adjacency_list_.size()) - 1;
     }
 
     std::optional<Weight> MaxSpanningTree() const {
-        std::vector<bool> is_in_spanning_tree(VertexCount(), false);
+        std::vector<bool> is_in_spanning_tree(VertexCount() + 1, false);
 
-        std::priority_queue<Edge, std::greater<>> 
+        std::priority_queue<Edge> edges_going_out_of_spanning_tree;
 
-
+        int unvisited_vertex_counter = VertexCount();
+        
+        auto AddVertexToSpanningTree = [&](VertexId vertex_id) {
+            if (!is_in_spanning_tree[vertex_id]) {
+                --unvisited_vertex_counter;
+                
+                is_in_spanning_tree[vertex_id] = true;
+                
+                for (auto [adjacent_vertex_id, weight] : adjacency_list_[vertex_id]) {
+                    if (!is_in_spanning_tree[adjacent_vertex_id]) {
+                        edges_going_out_of_spanning_tree.push(Edge{vertex_id, adjacent_vertex_id, weight});
+                    }
+                }
+            }
+        };
+        
+        AddVertexToSpanningTree(kFirstVertexId);
+        
+        Weight weight_of_spanning_tree{};
+        
+        while (unvisited_vertex_counter > 0 && !edges_going_out_of_spanning_tree.empty()) {
+            auto min_edge = edges_going_out_of_spanning_tree.top();
+            
+            edges_going_out_of_spanning_tree.pop();
+            
+            if (!is_in_spanning_tree[min_edge.to]) {
+                weight_of_spanning_tree += min_edge.weight;
+                AddVertexToSpanningTree(min_edge.to);
+            }
+        }
+        
+        if (unvisited_vertex_counter > 0) {
+            return {};
+        }
+        
+        return weight_of_spanning_tree;
     }
 
 private:
@@ -82,6 +118,12 @@ Graph ReadUndirectedGraph(std::istream& input) {
 
 int main() {
     auto graph = ReadUndirectedGraph(std::cin);
+    
+    if (auto weight = graph.MaxSpanningTree()) {
+        std::cout << *weight << '\n';
+    } else {
+        std::cout << "Oops! I did it again\n";
+    }
 
     return 0;
 }
