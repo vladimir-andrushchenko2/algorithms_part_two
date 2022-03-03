@@ -13,7 +13,7 @@
 
 using VertexId = int;
 
-using Distance = int;
+using Weight = int;
 
 static constexpr int kInfinity = std::numeric_limits<int>::max();
 
@@ -21,7 +21,7 @@ static constexpr VertexId kNoneVertexId = -1;
 
 static constexpr VertexId kFirstVertexId = 1;
 
-using AdjacencyList = std::vector<std::unordered_map<VertexId, Distance>>;
+using AdjacencyList = std::vector<std::unordered_map<VertexId, Weight>>;
 
 using Matrix = std::vector<std::vector<int>>;
 
@@ -58,7 +58,7 @@ public:
         return false;
     }
 
-    Distance Weight(VertexId from, VertexId to) {
+    Weight Weight(VertexId from, VertexId to) {
         return adjacency_list_.at(from).at(to);
     }
 
@@ -70,14 +70,14 @@ public:
     }
 
     void ResetData() {
-        distance_ = std::vector<Distance>(adjacency_list_.size(), kInfinity);
+        distance_ = std::vector<Weight>(adjacency_list_.size(), kInfinity);
 
         previous_ = std::vector<VertexId>(adjacency_list_.size(), kNoneVertexId);
 
         is_visited_ = std::vector<bool>(adjacency_list_.size(), false);
     }
 
-    std::pair<std::vector<Distance>, std::vector<bool>> Dijkstra(VertexId starting_vertex) {
+    std::pair<std::vector<Weight>, std::vector<bool>> Dijkstra(VertexId starting_vertex) {
         ResetData();
 
         distance_[starting_vertex] = 0;
@@ -103,7 +103,7 @@ public:
 
 private:
     const AdjacencyList adjacency_list_;
-    std::vector<Distance> distance_;
+    std::vector<Weight> distance_;
     std::vector<VertexId> previous_;
     std::vector<bool> is_visited_;
 };
