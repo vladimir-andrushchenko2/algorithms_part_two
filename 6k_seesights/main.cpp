@@ -77,7 +77,7 @@ public:
         is_visited_ = std::vector<bool>(adjacency_list_.size(), false);
     }
 
-    std::vector<Distance> Dijkstra(VertexId starting_vertex) {
+    std::pair<std::vector<Distance>, std::vector<bool>> Dijkstra(VertexId starting_vertex) {
         ResetData();
 
         distance_[starting_vertex] = 0;
@@ -94,7 +94,11 @@ public:
             }
         }
 
-        return std::move(distance_);
+        return {std::move(distance_), std::move(is_visited_)};
+    }
+
+    int VertexCount() {
+        return static_cast<int>(adjacency_list_.size());
     }
 
 private:
@@ -131,11 +135,19 @@ Graph ReadUndirectedGraph(std::istream& input) {
 int main() {
     auto graph = ReadUndirectedGraph(std::cin);
 
-    for (VertexId id : graph.Dijkstra(kFirstVertexId)) {
-        std::cout << id << ' ';
-    }
+    for (int i = 1; i < graph.VertexCount(); ++i) {
+        auto [distances, is_visited] = graph.Dijkstra(i);
 
-    std::cout << std::endl;
+        for (int j = 1; j < graph.VertexCount(); ++j) {
+            if (is_visited[j]) {
+                std::cout << distances[j] << ' ';
+            } else {
+                std::cout << -1 << ' ';
+            }
+        }
+
+        std::cout << std::endl;
+    }
 
     return 0;
 }
