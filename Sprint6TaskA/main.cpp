@@ -16,7 +16,7 @@ using VertexId = int;
 
 using Weight = int;
 
-static constexpr int kInfinity = std::numeric_limits<int>::max();
+//static constexpr int kInfinity = std::numeric_limits<int>::max();
 
 static constexpr VertexId kNoneVertexId = -1;
 
@@ -106,8 +106,8 @@ Graph ReadUndirectedGraph(std::istream& input) {
 
         std::cin >> from >> to >> weight;
 
-        // if two edges between vertexes save only one with smaller weight
-        if (adjacency_list[from].count(to) == 0 || adjacency_list[from][to] > weight) {
+        // if two edges between vertexes save only one with bigger weight
+        if (adjacency_list[from].count(to) == 0 || adjacency_list[from][to] < weight) {
             adjacency_list[from][to] = weight;
             adjacency_list[to][from] = weight;
         }
