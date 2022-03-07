@@ -7,11 +7,6 @@
 #include <sstream>
 #include <deque>
 
-// Changed railroad types from R and B to Red and Blue to distinguish better
-enum class RailroadType {
-    Red, Blue
-};
-
 using VertexId = int;
 
 using AdjacencyList = std::vector<std::set<VertexId>>;
@@ -21,7 +16,7 @@ AdjacencyList MakeAdjacencyList(int vertex_count) {
 }
 
 struct City {
-    std::deque<VertexId> roads_to_cities;
+    std::unordered_set<VertexId> roads_to_cities;
 };
 
 class Graph {
@@ -51,16 +46,11 @@ public:
         }
     }
     
-    void DFS(std::vector<City>& cities) const {
-        for (VertexId starting_city_id = 1; starting_city_id < adjacency_list_.size(); ++starting_city_id) {
-            auto is_visited = GetVisitedStatus();
-            
-            std::deque<VertexId> visited_vertexes;
-            
-            DFS(starting_city_id, is_visited, [&cities, starting_city_id](VertexId vertex){
-                cities[starting_city_id].roads_to_cities.push_back(vertex);
-            });
-        }
+    template <typename Predicate>
+    void DFS(VertexId starting_vertex, Predicate predicate) const {
+        auto is_visited = GetVisitedStatus();
+        
+        DFS(starting_vertex, is_visited, predicate);
     }
     
     int AdjacencyListSize() const {
@@ -89,14 +79,28 @@ private:
     AdjacencyList adjacency_list_;
 };
 
+auto RunDFSFromEachCity(Graph graph) {
+    std::vector<City> cities(graph.AdjacencyListSize());
+    
+    for (VertexId starting_city_id = 1; starting_city_id < cities.size(); ++starting_city_id) {
+        graph.DFS(starting_city_id, [&cities, starting_city_id](VertexId vertex){
+            if (starting_city_id != vertex) {
+                cities[starting_city_id].roads_to_cities.insert(vertex);
+            }
+        });
+    }
+    
+    return cities;
+}
+
 std::pair<Graph, Graph> ReadDirectedGraphs(std::istream& input) {
     int vertexes_count;
     
     input >> vertexes_count >> std::ws;
     
-    AdjacencyList adjacency_list_red(vertexes_count + 1);
+    auto adjacency_list_red = MakeAdjacencyList(vertexes_count);
     
-    AdjacencyList adjacency_list_blue(vertexes_count + 1);
+    auto adjacency_list_blue = MakeAdjacencyList(vertexes_count);
     
     std::string connections_to_other_cities;
     
@@ -122,16 +126,18 @@ std::pair<Graph, Graph> ReadDirectedGraphs(std::istream& input) {
     return {adjacency_list_red, adjacency_list_blue};
 }
 
-const std::string test_string = R"d(5
-RRRB
-BRR
-BR
+const std::string test_string = R"d(3
+RB
 R
+
+
 )d";
 
 void PrintCitiesConnections(const std::vector<City>& cities) {
     for (VertexId city_id = 1; city_id < cities.size(); ++ city_id) {
-        std::cout << "city_id: " << city_id << " has roads leading to ";
+        if (!cities[city_id].roads_to_cities.empty()) {
+            std::cout << "city_id: " << city_id << " has roads leading to ";
+        }
         
         for (VertexId connected_city : cities[city_id].roads_to_cities) {
             std::cout << connected_city << ' ';
@@ -141,36 +147,35 @@ void PrintCitiesConnections(const std::vector<City>& cities) {
     }
 }
 
+bool IsRailwayNetworkOptimal(std::vector<City> red_network, std::vector<City> blue_network) {
+    assert(red_network.size() == blue_network.size());
+    
+    for (VertexId from_city_id = 1; from_city_id < red_network.size(); ++from_city_id) {
+        auto red_destinations = red_network[from_city_id].roads_to_cities;
+        auto blue_destinations = blue_network[from_city_id].roads_to_cities;
+        
+        for (auto red_destination : red_destinations) {
+            if (blue_destinations.count(red_destination)) {
+                return false;
+            }
+        }
+    }
+    
+    return true;
+}
+
 int main(int argc, const char * argv[]) {
     std::stringstream test_stream{test_string};
     
     auto [red_graph, blue_graph] = ReadDirectedGraphs(test_stream);
     
-    std::vector<City> cities_on_red_network(red_graph.AdjacencyListSize());
+    bool is_optimal = IsRailwayNetworkOptimal(RunDFSFromEachCity(red_graph), RunDFSFromEachCity(blue_graph));
     
-    red_graph.DFS(cities_on_red_network);
-    
-    PrintCitiesConnections(cities_on_red_network);
-    
-    std::cout << '\n';
-    
-    std::vector<City> cities_on_blue_network(blue_graph.AdjacencyListSize());
-    
-    blue_graph.DFS(cities_on_blue_network);
-    
-    PrintCitiesConnections(cities_on_blue_network);
-    
-//    for (VertexId city_id = 1; city_id < cities_on_red_network.size(); ++ city_id) {
-//        std::cout << "city_id: " << city_id << " has roads leading to ";
-//
-//        for (VertexId connected_city : cities_on_red_network[city_id].roads_to_cities) {
-//            std::cout << connected_city << ' ';
-//        }
-//
-//        std::cout << '\n';
-//    }
-    
-    
+    if (is_optimal) {
+        std::cout << "YES\n";
+    } else {
+        std::cout << "NO\n";
+    }
     
     return 0;
 }
