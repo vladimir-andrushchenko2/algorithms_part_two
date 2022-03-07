@@ -3,6 +3,8 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
+#include <sstream>
 
 // Changed railroad types from R and B to Red and Blue to distinguish better
 enum class RailroadType {
@@ -11,7 +13,7 @@ enum class RailroadType {
 
 using VertexId = int;
 
-using AdjacencyList = std::vector<std::unordered_set<VertexId>>;
+using AdjacencyList = std::vector<std::set<VertexId>>;
 
 AdjacencyList MakeAdjacencyList(int vertex_count) {
     return AdjacencyList(vertex_count + 1);
@@ -55,25 +57,10 @@ private:
     AdjacencyList adjacency_list_;
 };
 
-std::vector<std::string> ReadRailwayMap(std::istream& input_stream) {
-    int n_cities;
-    
-    input_stream >> n_cities;
-    
-    std::vector<std::string> output;
-    
-    for (int i = 0; i < n_cities; ++i) {
-        auto& connections_to_other_cities = output.emplace_back();
-        std::getline(input_stream, connections_to_other_cities);
-    }
-    
-    return output;
-}
-
-Graph ReadDirectedGraph(std::istream& input) {
+std::pair<Graph, Graph> ReadDirectedGraphs(std::istream& input) {
     int vertexes_count;
     
-    std::cin >> vertexes_count;
+    input >> vertexes_count >> std::ws;
     
     AdjacencyList adjacency_list_red(vertexes_count + 1);
 
@@ -100,15 +87,22 @@ Graph ReadDirectedGraph(std::istream& input) {
         }
     }
     
-    assert(false);
+    return {adjacency_list_red, adjacency_list_blue};
 }
 
+const std::string test_string = R"d(5
+RRRB
+BRR
+BR
+R
+)d";
+
 int main(int argc, const char * argv[]) {
-    auto country = ReadRailwayMap(std::cin);
+    std::stringstream test_stream{test_string};
     
-    for (auto& connections : country) {
-        std::cout << connections << '\n';
-    }
+    auto [red_graph, blue_graph] = ReadDirectedGraphs(test_stream);
+    
+    blue_graph.PrintDFS(std::cout, 2);
     
     return 0;
 }
