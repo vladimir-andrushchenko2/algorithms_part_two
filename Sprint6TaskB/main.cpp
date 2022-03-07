@@ -76,6 +76,7 @@ Graph ReadDirectedGraph(std::istream& input) {
     std::cin >> vertexes_count;
     
     AdjacencyList adjacency_list_red(vertexes_count + 1);
+
     AdjacencyList adjacency_list_blue(vertexes_count + 1);
     
     std::string connections_to_other_cities;
@@ -83,14 +84,18 @@ Graph ReadDirectedGraph(std::istream& input) {
     for (VertexId from_vertex_id = 1; from_vertex_id < vertexes_count; ++from_vertex_id) {
         std::getline(input, connections_to_other_cities);
         
-        // WARNING: unfinished here
-        for (int j = 0; j < connections_to_other_cities.size(); ++j) {
-            char road_type = connections_to_other_cities[j];
-            
-            assert(false);
-            VertexId to_vertex_id = from_vertex_id + j + 1;
+        for (int i = 0; i < connections_to_other_cities.size(); ++i) {
+            char road_type = connections_to_other_cities[i];
+
+            // + 1 because first cities first road leads to second city
+            VertexId to_vertex_id = from_vertex_id + i + 1;
+
             if (road_type == 'R') {
-                adjacency_list_red[from_vertex_id].insert(<#value_type &&__x#>)
+                adjacency_list_red[from_vertex_id].insert(to_vertex_id);
+            } else if (road_type == 'B') {
+                adjacency_list_blue[from_vertex_id].insert(to_vertex_id);
+            } else {
+                assert(false && "Roadtype must be R for Red or B for Blue");
             }
         }
     }
