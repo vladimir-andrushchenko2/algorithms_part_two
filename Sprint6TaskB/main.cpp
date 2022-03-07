@@ -6,6 +6,7 @@
 #include <set>
 #include <sstream>
 #include <deque>
+#include <cassert>
 
 using VertexId = int;
 
@@ -25,26 +26,6 @@ public:
     
     Graph(AdjacencyList adjacency_list) :
     adjacency_list_(std::move(adjacency_list)) {}
-    
-    void PrintDFS(std::ostream& output_stream, VertexId starting_vertex) const {
-        auto is_visited = GetVisitedStatus();
-        
-        DFS(starting_vertex, is_visited, [&output_stream](VertexId vertex){
-            output_stream << vertex << ' ';
-        });
-    }
-    
-    void PrintDFS(std::ostream& output_stream) const {
-        auto is_visited = GetVisitedStatus();
-        
-        for (int i = 1; i < adjacency_list_.size(); ++i) {
-            if (!is_visited[i]) {
-                DFS(i, is_visited, [&output_stream](VertexId vertex){
-                    output_stream << vertex << ' ';
-                });
-            }
-        }
-    }
     
     template <typename Predicate>
     void DFS(VertexId starting_vertex, Predicate predicate) const {
@@ -126,27 +107,6 @@ std::pair<Graph, Graph> ReadDirectedGraphs(std::istream& input) {
     return {adjacency_list_red, adjacency_list_blue};
 }
 
-const std::string test_string = R"d(3
-RB
-R
-
-
-)d";
-
-void PrintCitiesConnections(const std::vector<City>& cities) {
-    for (VertexId city_id = 1; city_id < cities.size(); ++ city_id) {
-        if (!cities[city_id].roads_to_cities.empty()) {
-            std::cout << "city_id: " << city_id << " has roads leading to ";
-        }
-        
-        for (VertexId connected_city : cities[city_id].roads_to_cities) {
-            std::cout << connected_city << ' ';
-        }
-        
-        std::cout << '\n';
-    }
-}
-
 bool IsRailwayNetworkOptimal(std::vector<City> red_network, std::vector<City> blue_network) {
     assert(red_network.size() == blue_network.size());
     
@@ -165,9 +125,7 @@ bool IsRailwayNetworkOptimal(std::vector<City> red_network, std::vector<City> bl
 }
 
 int main(int argc, const char * argv[]) {
-    std::stringstream test_stream{test_string};
-    
-    auto [red_graph, blue_graph] = ReadDirectedGraphs(test_stream);
+    auto [red_graph, blue_graph] = ReadDirectedGraphs(std::cin);
     
     bool is_optimal = IsRailwayNetworkOptimal(RunDFSFromEachCity(red_graph), RunDFSFromEachCity(blue_graph));
     
