@@ -17,7 +17,7 @@ AdjacencyList MakeAdjacencyList(int vertex_count) {
 }
 
 struct City {
-    std::unordered_set<VertexId> roads_to_cities;
+    std::unordered_map<VertexId, char> accessible_to_cities;
 };
 
 class Graph {
@@ -60,18 +60,40 @@ private:
     AdjacencyList adjacency_list_;
 };
 
-auto RunDFSFromEachCity(Graph graph) {
-    std::vector<City> cities(graph.AdjacencyListSize());
+bool ConnectCitiesAccordingToGraphWithRoadsOfType(std::vector<City>& cities, const Graph& graph, char type) {
+    std::vector<bool> is_visited(graph.AdjacencyListSize(), false);
     
+    bool is_duplicate_route_fount = false;
+    
+    // replace 1 with constant
     for (VertexId starting_city_id = 1; starting_city_id < cities.size(); ++starting_city_id) {
-        graph.DFS(starting_city_id, [&cities, starting_city_id](VertexId vertex){
-            if (starting_city_id != vertex) {
-                cities[starting_city_id].roads_to_cities.insert(vertex);
-            }
-        });
+        if (!is_visited[starting_city_id]) {
+            std::vector<VertexId> already_reached_cities;
+            
+            graph.DFS(starting_city_id, [&](VertexId current_city){
+                is_visited[current_city] = true;
+                
+                for (VertexId previously_visited : already_reached_cities) {
+                    auto& cities_have_access_to_current_city = cities[current_city].accessible_to_cities;
+                    
+                    if (cities_have_access_to_current_city.count(previously_visited) > 0 && cities_have_access_to_current_city[previously_visited] != type) {
+                        is_duplicate_route_fount = true;
+                    }
+                    
+                    cities_have_access_to_current_city[previously_visited] = type;
+                }
+                
+                already_reached_cities.push_back(current_city);
+            });
+        }
+        
+        if (is_duplicate_route_fount) {
+            return false;
+        }
     }
     
-    return cities;
+    assert(false);
+    return true;
 }
 
 std::pair<Graph, Graph> ReadDirectedGraphs(std::istream& input) {
@@ -105,23 +127,6 @@ std::pair<Graph, Graph> ReadDirectedGraphs(std::istream& input) {
     }
     
     return {adjacency_list_red, adjacency_list_blue};
-}
-
-bool IsRailwayNetworkOptimal(std::vector<City> red_network, std::vector<City> blue_network) {
-    assert(red_network.size() == blue_network.size());
-    
-    for (VertexId from_city_id = 1; from_city_id < red_network.size(); ++from_city_id) {
-        auto red_destinations = red_network[from_city_id].roads_to_cities;
-        auto blue_destinations = blue_network[from_city_id].roads_to_cities;
-        
-        for (auto red_destination : red_destinations) {
-            if (blue_destinations.count(red_destination)) {
-                return false;
-            }
-        }
-    }
-    
-    return true;
 }
 
 int main(int argc, const char * argv[]) {
