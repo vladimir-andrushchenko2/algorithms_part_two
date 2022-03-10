@@ -123,6 +123,10 @@ std::pair<Graph, Graph> ReadDirectedGraphs(std::istream& input) {
     return {adjacency_list_red, adjacency_list_blue};
 }
 
+
+// TODO: try first reading and connecting one by one
+
+
 int main(int argc, const char * argv[]) {
     auto [red_graph, blue_graph] = ReadDirectedGraphs(std::cin);
     
