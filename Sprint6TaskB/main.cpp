@@ -23,15 +23,15 @@ public:
     Graph() = delete;
     
     Graph(Matrix matrix) :
-    matrix_(std::move(matrix)), cities_(matrix_.size() + 1) {}
+    matrix_(std::move(matrix)), cities_(matrix_.size()) {}
     
     void ConnectCities(VertexId current_id, std::pair<std::stack<VertexId>, char> previous) {
         for (int i = 0; i < matrix_[current_id].size(); ++i) {
             VertexId to_id = current_id + i + 1;
             
-            if (matrix_[current_id][to_id - current_id - 1] != previous.second) {
+            if (matrix_[current_id][i] != previous.second) {
                 // assign new type
-                previous.second = matrix_[current_id][to_id - 1];
+                previous.second = matrix_[current_id][i];
                 
                 // clear stack
                 std::stack<VertexId> empty_temp;
@@ -67,14 +67,17 @@ Graph ReadMatrix(std::istream& input) {
     
     input >> vertexes_count >> std::ws;
     
-    Matrix matrix;
+    Matrix matrix(vertexes_count);
     
     std::string roads_from_city;
+
+    // decrease for cicle to run on step less because last city doesn't have outgoing edges
+    --vertexes_count;
     
-    for (int i = 1; i < vertexes_count; ++i) {
+    for (int i = 0; i < vertexes_count; ++i) {
         std::getline(input, roads_from_city);
         
-        matrix.push_back(std::move(roads_from_city));
+        matrix[i] = std::move(roads_from_city);
     }
     
     return {std::move(matrix)};
