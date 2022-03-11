@@ -8,11 +8,17 @@
 #include <deque>
 #include <cassert>
 #include <stdexcept>
-#include <stack>
+#include <deque>
 
 using VertexId = int;
 
-using Matrix = std::vector<std::string>;
+static constexpr VertexId kFirstId = 1;
+
+using AdjacencyList = std::vector<std::set<VertexId>>;
+
+AdjacencyList MakeAdjacencyList(int vertex_count) {
+    return AdjacencyList(kFirstId + vertex_count);
+}
 
 struct City {
     std::unordered_map<VertexId, char> from;
@@ -21,79 +27,112 @@ struct City {
 class Graph {
 public:
     Graph() = delete;
-    
-    Graph(Matrix matrix) :
-    matrix_(std::move(matrix)), cities_(matrix_.size()) {}
-    
-    void ConnectCities(VertexId current_id, std::pair<std::stack<VertexId>, char> previous) {
-        for (int i = 0; i < matrix_[current_id].size(); ++i) {
-            VertexId to_id = current_id + i + 1;
-            
-            if (matrix_[current_id][i] != previous.second) {
-                // assign new type
-                previous.second = matrix_[current_id][i];
-                
-                // clear stack
-                std::stack<VertexId> empty_temp;
-                std::swap(previous.first, empty_temp);
-            }
 
-            previous.first.push(current_id);
+    Graph(AdjacencyList adjacency_list) :
+    adjacency_list_(std::move(adjacency_list)) {}
 
-            ConnectCities(to_id, previous);
+    void ConnectCities(std::vector<City>& cities, char type) const {
+        auto is_visited = GetVisitedStatus();
 
-            previous.first.pop();
-        }
-        
-        while (!previous.first.empty()) {
-            VertexId previous_city = previous.first.top();
-            previous.first.pop();
-            
-            if (cities_[current_id].from.count(previous_city) > 0 && cities_[current_id].from[previous_city] != previous.second) {
-                throw std::logic_error("duplicate route");
-            } else {
-                cities_[current_id].from[previous_city] = previous.second;
+        std::deque<VertexId> previous;
+
+        for (VertexId starting_city_id = kFirstId; starting_city_id < cities.size(); ++starting_city_id) {
+            if (!is_visited[starting_city_id]) {
+                DFS(starting_city_id, is_visited, previous, [&cities, type](VertexId current_city, const std::deque<VertexId>& previous){
+                    for (VertexId previously_visited : previous) {
+                        if (cities[current_city].from.count(previously_visited) > 0 && cities[current_city].from[previously_visited] != type) {
+                            throw std::logic_error("duplicate connection of different road types");
+                        }
+
+                        cities[current_city].from[previously_visited] = type;
+                    }
+                });
             }
         }
     }
-    
+
+    int AdjacencyListSize() const {
+        return static_cast<int>(adjacency_list_.size());
+    }
+
 private:
-    Matrix matrix_;
-    std::vector<City> cities_;
+    std::vector<bool> GetVisitedStatus() const {
+        return std::vector(adjacency_list_.size(), false);
+    }
+
+    template<typename Predicate>
+    void DFS(VertexId start_id, std::vector<bool>& is_visited, std::deque<VertexId>& previous, Predicate predicate) const {
+        predicate(start_id, previous);
+
+        previous.push_back(start_id);
+
+        is_visited[start_id] = true;
+
+        for (VertexId adjacent_vertex : adjacency_list_[start_id]) {
+            if (!is_visited[adjacent_vertex]) {
+                DFS(adjacent_vertex, is_visited, previous, predicate);
+            }
+        }
+
+        previous.pop_back();
+    }
+
+private:
+    AdjacencyList adjacency_list_;
 };
 
-Graph ReadMatrix(std::istream& input) {
+std::pair<Graph, Graph> ReadDirectedGraphs(std::istream& input) {
     int vertexes_count;
-    
-    input >> vertexes_count >> std::ws;
-    
-    Matrix matrix(vertexes_count);
-    
-    std::string roads_from_city;
 
-    // decrease for cicle to run on step less because last city doesn't have outgoing edges
-    --vertexes_count;
-    
-    for (int i = 0; i < vertexes_count; ++i) {
-        std::getline(input, roads_from_city);
-        
-        matrix[i] = std::move(roads_from_city);
+    input >> vertexes_count >> std::ws;
+
+    auto adjacency_list_red = MakeAdjacencyList(vertexes_count);
+
+    auto adjacency_list_blue = MakeAdjacencyList(vertexes_count);
+
+    std::string connections_to_other_cities;
+
+    for (VertexId from_vertex_id = 1; from_vertex_id < vertexes_count; ++from_vertex_id) {
+        std::getline(input, connections_to_other_cities);
+
+        for (int i = 0; i < connections_to_other_cities.size(); ++i) {
+            char road_type = connections_to_other_cities[i];
+
+            // + 1 because first cities first road leads to second city
+            VertexId to_vertex_id = from_vertex_id + i + 1;
+
+            if (road_type == 'R') {
+                adjacency_list_red[from_vertex_id].insert(to_vertex_id);
+            } else if (road_type == 'B') {
+                adjacency_list_blue[from_vertex_id].insert(to_vertex_id);
+            } else {
+                assert(false && "Roadtype must be R for Red or B for Blue");
+            }
+        }
     }
-    
-    return {std::move(matrix)};
+
+    return {adjacency_list_red, adjacency_list_blue};
 }
 
+
+// TODO: try first reading and connecting one by one
+
+
 int main(int argc, const char * argv[]) {
-    auto matrix = ReadMatrix(std::cin);
+    auto [red_graph, blue_graph] = ReadDirectedGraphs(std::cin);
+
+    std::vector<City> cities(red_graph.AdjacencyListSize());
 
     try {
-        matrix.ConnectCities(0, {{}, '\0'});
+        red_graph.ConnectCities(cities, 'R');
+
+        blue_graph.ConnectCities(cities, 'B');
 
         std::cout << "YES\n";
-    } catch (std::logic_error& e) {
+
+    } catch (std::logic_error error) {
         std::cout << "NO\n";
     }
-
 
     return 0;
 }
