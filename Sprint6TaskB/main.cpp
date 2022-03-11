@@ -23,24 +23,26 @@ public:
     Graph() = delete;
     
     Graph(Matrix matrix) :
-    matrix_(std::move(matrix)), cities_(matrix_.size()) {}
+    matrix_(std::move(matrix)), cities_(matrix_.size() + 1) {}
     
-    void DFS(VertexId current_id, std::pair<std::stack<VertexId>, char> previous) {
+    void ConnectCities(VertexId current_id, std::pair<std::stack<VertexId>, char> previous) {
         for (int i = 0; i < matrix_[current_id].size(); ++i) {
             VertexId to_id = current_id + i + 1;
             
-            if (matrix_[current_id][to_id] != previous.second) {
+            if (matrix_[current_id][to_id - current_id - 1] != previous.second) {
                 // assign new type
-                previous.second = matrix_[current_id][to_id];
+                previous.second = matrix_[current_id][to_id - 1];
                 
                 // clear stack
                 std::stack<VertexId> empty_temp;
                 std::swap(previous.first, empty_temp);
-            } else {
-                previous.first.push(current_id);
             }
-            
-            DFS(to_id, previous);
+
+            previous.first.push(current_id);
+
+            ConnectCities(to_id, previous);
+
+            previous.first.pop();
         }
         
         while (!previous.first.empty()) {
@@ -60,7 +62,7 @@ private:
     std::vector<City> cities_;
 };
 
-Graph ReadDirectedGraphs(std::istream& input) {
+Graph ReadMatrix(std::istream& input) {
     int vertexes_count;
     
     input >> vertexes_count >> std::ws;
@@ -69,7 +71,7 @@ Graph ReadDirectedGraphs(std::istream& input) {
     
     std::string roads_from_city;
     
-    for (int i = 0; i < vertexes_count; ++i) {
+    for (int i = 1; i < vertexes_count; ++i) {
         std::getline(input, roads_from_city);
         
         matrix.push_back(std::move(roads_from_city));
@@ -78,11 +80,17 @@ Graph ReadDirectedGraphs(std::istream& input) {
     return {std::move(matrix)};
 }
 
-
-// TODO: try first reading and connecting one by one
-
-
 int main(int argc, const char * argv[]) {
-    
+    auto matrix = ReadMatrix(std::cin);
+
+    try {
+        matrix.ConnectCities(0, {{}, '\0'});
+
+        std::cout << "YES\n";
+    } catch (std::logic_error& e) {
+        std::cout << "NO\n";
+    }
+
+
     return 0;
 }
