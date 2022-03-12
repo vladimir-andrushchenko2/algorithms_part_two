@@ -59,6 +59,22 @@ public:
         });
     }
     
+    bool ContainsLoop(VertexId starting_vertex) {
+        auto colors = GetArrayOfColor(Color::White);
+        
+        bool found_loop = false;
+        
+        DFS(starting_vertex, colors, [&](VertexId current_vertex_id) {
+            for (VertexId adjacent_vertex_id : adjacency_list_[current_vertex_id]) {
+                if (colors[adjacent_vertex_id] == Color::Gray) {
+                    found_loop = true;
+                }
+            }
+        });
+        
+        return found_loop;
+    }
+    
 private:
     std::vector<Color> GetArrayOfColor(Color color) const {
         return {adjacency_list_.size(), color};
@@ -75,6 +91,8 @@ private:
                 DFS(adjacent_vertex, color_of, predicate);
             }
         }
+        
+        color_of[start_id] = Color::Black;
     }
     
     template<typename Predicate>
