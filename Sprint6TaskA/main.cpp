@@ -1,3 +1,4 @@
+// 66251609
 #include <iostream>
 #include <vector>
 #include <set>
@@ -12,17 +13,25 @@
 #include <unordered_map>
 #include <queue>
 
+/*
+-- ПРИНЦИП РАБОТЫ --
+Используется алгоритм Прима в котором из всех исходящих ребер из остова выбирается с наибольшим весом и добавляется к остову.
+ 
+-- ВРЕМЕННАЯ СЛОЖНОСТЬ --
+ O(∣E∣⋅log∣V∣) для поиска максимального остова нужно посетить все верщины и из каждой вершины проверить соседние
+ использование очереди приоритетов помогает улучшить асимптотическую сложность
+
+-- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
+ Для решения алгоритма нужно хранить список смежности O(|V|+|E|).
+*/
+
 using VertexId = int;
 
 using Weight = int;
 
-//static constexpr int kInfinity = std::numeric_limits<int>::max();
-
 static constexpr VertexId kNoneVertexId = -1;
 
 static constexpr VertexId kFirstVertexId = 1;
-
-using AdjacencyList = std::vector<std::unordered_map<VertexId, Weight>>;
 
 struct Edge {
     VertexId from = kNoneVertexId;
@@ -36,16 +45,20 @@ bool operator<(const Edge& left, const Edge& right) {
 
 struct Graph {
 public:
+    using AdjacencyList = std::vector<std::unordered_map<VertexId, Weight>>;
+
+public:
     Graph() = delete;
 
     Graph(AdjacencyList adjacency_list) :
     adjacency_list_(std::move(adjacency_list)) {}
 
     int VertexCount() const {
+        // - 1 because vector is used as associative container and element under index of 0 is ficticious
         return static_cast<int>(adjacency_list_.size()) - 1;
     }
 
-    std::optional<Weight> MaxSpanningTree() const {
+    std::optional<Weight> WeightOfMaxSpanningTree() const {
         std::vector<bool> is_in_spanning_tree(VertexCount() + 1, false);
 
         std::priority_queue<Edge> edges_going_out_of_spanning_tree;
@@ -71,13 +84,13 @@ public:
         Weight weight_of_spanning_tree{};
         
         while (unvisited_vertex_counter > 0 && !edges_going_out_of_spanning_tree.empty()) {
-            auto min_edge = edges_going_out_of_spanning_tree.top();
+            auto max_edge = edges_going_out_of_spanning_tree.top();
             
             edges_going_out_of_spanning_tree.pop();
             
-            if (!is_in_spanning_tree[min_edge.to]) {
-                weight_of_spanning_tree += min_edge.weight;
-                AddVertexToSpanningTree(min_edge.to);
+            if (!is_in_spanning_tree[max_edge.to]) {
+                weight_of_spanning_tree += max_edge.weight;
+                AddVertexToSpanningTree(max_edge.to);
             }
         }
         
@@ -97,7 +110,7 @@ Graph ReadUndirectedGraph(std::istream& input) {
 
     std::cin >> vertexes_count >> edges_count;
 
-    AdjacencyList adjacency_list(vertexes_count + 1);
+    Graph::AdjacencyList adjacency_list(vertexes_count + 1);
 
     std::string line;
 
@@ -119,7 +132,7 @@ Graph ReadUndirectedGraph(std::istream& input) {
 int main() {
     auto graph = ReadUndirectedGraph(std::cin);
     
-    if (auto weight = graph.MaxSpanningTree()) {
+    if (auto weight = graph.WeightOfMaxSpanningTree()) {
         std::cout << *weight << '\n';
     } else {
         std::cout << "Oops! I did it again\n";
