@@ -35,14 +35,12 @@ std::vector<VertexId> DFS(int start_vertex, const AdjacencyList& adjacency_list)
                 if (vertex_color[adjacent_vertex_id] == Color::White) {
                     stack.push(adjacent_vertex_id);
                 }
-
-                if (vertex_color[adjacent_vertex_id] == Color::Gray) {
-                    vertex_color[adjacent_vertex_id] = Color::Black;
-                }
             }
 
         } else {
             stack.pop();
+            
+            vertex_color[vertex_id] = Color::Black;
         }
     }
 
